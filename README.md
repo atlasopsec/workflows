@@ -136,19 +136,17 @@ jobs:
 
 Releases use [semantic versions](https://semver.org). A **major tag** (`v1`) always points at the latest release in that major version, and that's what projects call.
 
-After a PR merges:
+After a PR merges, publish a release in GitHub's UI:
 
-```bash
-git checkout main && git pull
-git tag v1.0.0              # the new version
-git tag -f v1               # move the major tag to it
-git push origin v1.0.0
-git push -f origin v1       # only the major tag is ever force-pushed
-```
+1. Go to **Releases → Draft a new release**.
+2. Under **Choose a tag**, type the new version (for example `v1.1.0`) and pick **Create new tag on publish**, targeting `main`.
+3. Click **Generate release notes**, then **Publish release**.
+
+The [`major-tag`](.github/workflows/major-tag.yml) workflow then moves the major tag (`v1`) to the new release by itself. Publishing an older patch (like `v1.0.1` after `v1.1.0`) leaves the major tag alone, and pre-releases are ignored.
 
 - **Patch** (`v1.0.1`): a fix that changes nothing for callers.
 - **Minor** (`v1.1.0`): something new that callers can ignore, like a new optional input or a new workflow.
-- **Major** (`v2.0.0`): anything that could break a caller, like a removed input, a new required tool, or a stricter check. Create a new `v2` tag and leave `v1` where it is. Each project moves to `v2` in its own PR.
+- **Major** (`v2.0.0`): anything that could break a caller, like a removed input, a new required tool, or a stricter check. Publishing it creates a new `v2` tag and leaves `v1` where it is. Each project moves to `v2` in its own PR.
 
 ## License
 
