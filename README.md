@@ -39,7 +39,7 @@ on:
     types: [opened, edited, synchronize, reopened]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -122,6 +122,7 @@ jobs:
 ### Notes for callers
 
 - **Permissions:** a shared workflow can't have more permissions than its caller grants, so keep the `permissions:` block in each caller.
+- **The PR title caller groups by PR number.** Under `pull_request_target`, `github.ref` is the base branch, so grouping by it would make every open PR share one group and cancel each other's title checks.
 - **Concurrency goes in the caller only.** Inside a shared workflow, `github.workflow` is the caller's name, so a `concurrency` group there would match the caller's own group and cancel itself.
 - **Path filters:** a workflow skipped by `paths` doesn't report a status. That's fine while branch protection isn't enforced; if a check is ever made required, drop its path filter.
 - **End-to-end tests** (Playwright) depend on each app's setup, so they stay in the project's own workflow for now.
