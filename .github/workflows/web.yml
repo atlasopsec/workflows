@@ -1,0 +1,54 @@
+# Checks a Next.js or Astro app: formatting, lint, types, and unit tests.
+# Runs the same commands as `make lint` and `make test` in the Makefile template.
+#
+# Node's version comes from .node-version, and pnpm's from `packageManager` in
+# the root package.json. Dependencies are installed from the repo root, so pnpm
+# workspaces (apps/web, packages/shared) work.
+
+name: web
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Folder containing the app's package.json
+        type: string
+        default: apps/web
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm prettier --check .
+
+      - name: Lint
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm eslint .
+
+      - name: Check types
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm tsc --noEmit
+
+      - name: Test
+        working-directory: ${{ inputs.working-directory }}
+        run: pnpm vitest run

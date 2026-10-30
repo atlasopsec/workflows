@@ -1,0 +1,59 @@
+# Checks a Go module: formatting, lint, sqlc generated code, known
+# vulnerabilities, and tests with the race detector. Runs the same commands as
+# `make lint` and `make test` in the Makefile template.
+#
+# Tools run with `go tool`, so the calling module must list goimports,
+# golangci-lint, govulncheck, and (if it uses sqlc) sqlc as `tool` lines in
+# its go.mod. Go's version comes from that go.mod too.
+
+name: go
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Folder containing go.mod
+        type: string
+        default: api
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: ${{ inputs.working-directory }}/go.mod
+          cache-dependency-path: ${{ inputs.working-directory }}/go.sum
+
+      - name: Check formatting
+        run: |
+          out=$(go tool goimports -l .)
+          if [ -n "$out" ]; then
+            echo "Not formatted (run make fmt):"
+            echo "$out"
+            exit 1
+          fi
+
+      - name: Lint
+        run: go tool golangci-lint run
+
+      - name: Check sqlc generated code is up to date
+        if: hashFiles(format('{0}/sqlc.yaml', inputs.working-directory)) != ''
+        run: go tool sqlc diff
+
+      - name: Check for known vulnerabilities
+        run: go tool govulncheck ./...
+
+      - name: Test
+        run: go test -race ./...
