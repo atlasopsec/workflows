@@ -149,3 +149,7 @@ git push -f origin v1       # only the major tag is ever force-pushed
 - **Patch** (`v1.0.1`): a fix that changes nothing for callers.
 - **Minor** (`v1.1.0`): something new that callers can ignore, like a new optional input or a new workflow.
 - **Major** (`v2.0.0`): anything that could break a caller, like a removed input, a new required tool, or a stricter check. Create a new `v2` tag and leave `v1` where it is. Each project moves to `v2` in its own PR.
+
+## License
+
+[MIT](LICENSE)
