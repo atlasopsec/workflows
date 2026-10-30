@@ -66,5 +66,8 @@ jobs:
       - name: Check for known vulnerabilities
         run: $TOOL govulncheck ./...
 
+      # -count=1 so tests always run. Go can't see an external database or
+      # service as a test input, so a cached result restored from an earlier
+      # run could skip tests that would now fail.
       - name: Test
-        run: go test -race ./...
+        run: go test -race -count=1 ./...

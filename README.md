@@ -12,7 +12,7 @@ This repo is public because a private repo's workflows can only be called by rep
 |---|---|---|
 | [`pr-title.yml`](.github/workflows/pr-title.yml) | The PR title follows Conventional Commits. Skipped for Dependabot | None |
 | [`gitleaks.yml`](.github/workflows/gitleaks.yml) | No secrets anywhere in the git history | None |
-| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race` | `working-directory` (default `api`), `tools-modfile` (default empty) |
+| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race -count=1` (never cached) | `working-directory` (default `api`), `tools-modfile` (default empty) |
 | [`web.yml`](.github/workflows/web.yml) | Prettier, ESLint, TypeScript types, and Vitest | `working-directory` (default `apps/web`) |
 
 They run the same commands as `make lint` and `make test` in the [Makefile template](https://github.com/jakefrenzel/engineering-standards/blob/main/templates/Makefile).
