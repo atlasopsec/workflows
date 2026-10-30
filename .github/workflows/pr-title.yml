@@ -1,0 +1,43 @@
+# Checks that the PR title follows Conventional Commits. The title becomes the
+# squash commit message on main, so it's the one that matters.
+#
+# Call it from a workflow triggered by pull_request_target (see README.md).
+# That trigger is safe here because this workflow never checks out the PR's code.
+
+name: pr-title
+
+on:
+  workflow_call:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  check:
+    # Dependabot's titles are machine-generated ("chore(deps): Bump ...") and
+    # capitalize the summary, so they're skipped. A skipped check still passes.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            refactor
+            test
+            perf
+            build
+            ci
+            style
+            revert
+          requireScope: false
+          # Summary must not start with an uppercase letter
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The summary "{subject}" must start with a lowercase letter.

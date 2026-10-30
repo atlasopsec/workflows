@@ -1,0 +1,19 @@
+# This repo's own PR title check. Separate from ci.yml because it needs the
+# pull_request_target trigger, and it calls the shared workflow by local path.
+
+name: pr-title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: read
+
+jobs:
+  pr-title:
+    uses: ./.github/workflows/pr-title.yml
