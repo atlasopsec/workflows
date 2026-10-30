@@ -12,14 +12,14 @@ This repo is public because a private repo's workflows can only be called by rep
 |---|---|---|
 | [`pr-title.yml`](.github/workflows/pr-title.yml) | The PR title follows Conventional Commits. Skipped for Dependabot | None |
 | [`gitleaks.yml`](.github/workflows/gitleaks.yml) | No secrets anywhere in the git history | None |
-| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race` | `working-directory` (default `api`) |
+| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race` | `working-directory` (default `api`), `tools-modfile` (default empty) |
 | [`web.yml`](.github/workflows/web.yml) | Prettier, ESLint, TypeScript types, and Vitest | `working-directory` (default `apps/web`) |
 
 They run the same commands as `make lint` and `make test` in the [Makefile template](https://github.com/jakefrenzel/engineering-standards/blob/main/templates/Makefile).
 
 **What the calling repo needs:**
 
-- **Go:** `goimports`, `golangci-lint`, `govulncheck`, and (if used) `sqlc` as `tool` lines in `go.mod` (`go get -tool <module>`). Go's version comes from `go.mod`.
+- **Go:** `goimports`, `golangci-lint`, `govulncheck`, and (if used) `sqlc` as `tool` lines (`go get -tool <module>`), either in the module's own `go.mod` or, for a library, in a separate tools module passed as `tools-modfile` (for example `tools/go.mod`), so projects that import the library don't inherit the tools. Go's version comes from the module's `go.mod`.
 - **Web:** a `.node-version` file and `packageManager` in the root `package.json`, with `prettier`, `eslint`, `typescript`, and `vitest` installed.
 - **gitleaks:** findings that aren't real secrets go in a `.gitleaksignore` at the repo root.
 
@@ -92,7 +92,8 @@ jobs:
     if: github.event.pull_request.draft == false
     uses: atlasopsec/workflows/.github/workflows/go.yml@v1
     # with:
-    #   working-directory: .   # for a Go-only repo with go.mod at the root
+    #   working-directory: .         # for a Go-only repo with go.mod at the root
+    #   tools-modfile: tools/go.mod  # for a library that keeps its tools separate
 ```
 
 ### `.github/workflows/web.yml`

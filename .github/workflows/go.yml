@@ -4,7 +4,9 @@
 #
 # Tools run with `go tool`, so the calling module must list goimports,
 # golangci-lint, govulncheck, and (if it uses sqlc) sqlc as `tool` lines in
-# its go.mod. Go's version comes from that go.mod too.
+# its go.mod, or in a separate tools module named by `tools-modfile`.
+# Libraries use the separate module, so projects that import them don't
+# inherit the tools. Go's version comes from the calling module's go.mod.
 
 name: go
 
@@ -15,6 +17,13 @@ on:
         description: Folder containing go.mod
         type: string
         default: api
+      tools-modfile:
+        description: >-
+          go.mod of a separate tools module, relative to working-directory
+          (for example tools/go.mod). Empty means the tools are in the
+          module's own go.mod.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -26,6 +35,8 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
+    env:
+      TOOL: go tool${{ inputs.tools-modfile != '' && format(' -modfile={0}', inputs.tools-modfile) || '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -34,11 +45,11 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: ${{ inputs.working-directory }}/go.mod
-          cache-dependency-path: ${{ inputs.working-directory }}/go.sum
+          cache-dependency-path: ${{ inputs.working-directory }}/**/go.sum
 
       - name: Check formatting
         run: |
-          out=$(go tool goimports -l .)
+          out=$($TOOL goimports -l .)
           if [ -n "$out" ]; then
             echo "Not formatted (run make fmt):"
             echo "$out"
@@ -46,14 +57,14 @@ jobs:
           fi
 
       - name: Lint
-        run: go tool golangci-lint run
+        run: $TOOL golangci-lint run
 
       - name: Check sqlc generated code is up to date
         if: hashFiles(format('{0}/sqlc.yaml', inputs.working-directory)) != ''
-        run: go tool sqlc diff
+        run: $TOOL sqlc diff
 
       - name: Check for known vulnerabilities
-        run: go tool govulncheck ./...
+        run: $TOOL govulncheck ./...
 
       - name: Test
         run: go test -race ./...
