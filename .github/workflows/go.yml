@@ -1,6 +1,7 @@
-# Checks a Go module: formatting, lint, sqlc generated code, known
-# vulnerabilities, and tests with the race detector. Runs the same commands as
-# `make lint` and `make test` in the Makefile template.
+# Checks a Go module: formatting, that go.mod and go.sum are tidy, lint, sqlc
+# generated code, known vulnerabilities, and tests with the race detector.
+# Runs the same commands as `make lint` and `make test` in the Makefile
+# template.
 #
 # Tools run with `go tool`, so the calling module must list goimports,
 # golangci-lint, govulncheck, and (if it uses sqlc) sqlc as `tool` lines in
@@ -54,6 +55,24 @@ jobs:
             echo "Not formatted (run make fmt):"
             echo "$out"
             exit 1
+          fi
+
+      # go.mod and go.sum must be what `go mod tidy` makes them, so a missing
+      # or stale requirement fails here, not in whatever runs tidy next. A
+      # separate tools module is its own module, tidied in its own folder.
+      - name: Check go.mod and go.sum are tidy
+        env:
+          TOOLS_MODFILE: ${{ inputs.tools-modfile }}
+        run: |
+          if ! go mod tidy -diff; then
+            echo "go.mod or go.sum is not tidy (run go mod tidy)"
+            exit 1
+          fi
+          if [ -n "$TOOLS_MODFILE" ]; then
+            if ! (cd "$(dirname "$TOOLS_MODFILE")" && go mod tidy -diff); then
+              echo "$TOOLS_MODFILE is not tidy (run go mod tidy in its folder)"
+              exit 1
+            fi
           fi
 
       - name: Lint
