@@ -12,7 +12,7 @@ This repo is public because a private repo's workflows can only be called by rep
 |---|---|---|
 | [`pr-title.yml`](.github/workflows/pr-title.yml) | The PR title follows Conventional Commits. Skipped for Dependabot | None |
 | [`gitleaks.yml`](.github/workflows/gitleaks.yml) | No secrets anywhere in the git history | None |
-| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race -count=1` (never cached) | `working-directory` (default `api`), `tools-modfile` (default empty) |
+| [`go.yml`](.github/workflows/go.yml) | Formatting (`goimports`), `go.mod` and `go.sum` are tidy (`go mod tidy -diff`, and in the tools module's folder too when there is one), `golangci-lint`, `sqlc diff` (if there's a `sqlc.yaml`), `govulncheck`, and `go test -race -count=1` (never cached) | `working-directory` (default `api`), `tools-modfile` (default empty) |
 | [`web.yml`](.github/workflows/web.yml) | Prettier, ESLint, TypeScript types, and Vitest | `working-directory` (default `apps/web`) |
 
 They run the same commands as `make lint` and `make test` in the [Makefile template](https://github.com/jakefrenzel/engineering-standards/blob/main/templates/Makefile).
@@ -27,7 +27,7 @@ They run the same commands as `make lint` and `make test` in the [Makefile templ
 
 Add one short caller file per workflow to the project's `.github/workflows/`. The caller decides **when** to run; the shared workflow decides **what** runs.
 
-Always call by **major tag** (`@v1`), never `@main`.
+Always call by **major tag** (`@v2`), never `@main`.
 
 ### `.github/workflows/pr-title.yml`
 
@@ -47,7 +47,7 @@ permissions:
 
 jobs:
   pr-title:
-    uses: atlasopsec/workflows/.github/workflows/pr-title.yml@v1
+    uses: atlasopsec/workflows/.github/workflows/pr-title.yml@v2
 ```
 
 ### `.github/workflows/gitleaks.yml`
@@ -67,7 +67,7 @@ permissions:
 
 jobs:
   gitleaks:
-    uses: atlasopsec/workflows/.github/workflows/gitleaks.yml@v1
+    uses: atlasopsec/workflows/.github/workflows/gitleaks.yml@v2
 ```
 
 ### `.github/workflows/go.yml`
@@ -90,7 +90,7 @@ permissions:
 jobs:
   go:
     if: github.event.pull_request.draft == false
-    uses: atlasopsec/workflows/.github/workflows/go.yml@v1
+    uses: atlasopsec/workflows/.github/workflows/go.yml@v2
     # with:
     #   working-directory: .         # for a Go-only repo with go.mod at the root
     #   tools-modfile: tools/go.mod  # for a library that keeps its tools separate
@@ -116,7 +116,7 @@ permissions:
 jobs:
   web:
     if: github.event.pull_request.draft == false
-    uses: atlasopsec/workflows/.github/workflows/web.yml@v1
+    uses: atlasopsec/workflows/.github/workflows/web.yml@v2
 ```
 
 ### Notes for callers
